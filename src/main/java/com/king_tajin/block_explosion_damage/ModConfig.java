@@ -8,15 +8,15 @@ import java.util.Map;
 
 public class ModConfig {
 
-    private static int defaultHits = 3;
+    private static int defaultHits = 6;
     private static int damageDecayTime = 6000;
     private static final Map<Block, Integer> customBlockHits = new HashMap<>();
 
     public static void init() {
-        customBlockHits.put(Blocks.DIRT, 1);
-        customBlockHits.put(Blocks.GRASS_BLOCK, 1);
-        customBlockHits.put(Blocks.SAND, 1);
-        customBlockHits.put(Blocks.GRAVEL, 2);
+        customBlockHits.put(Blocks.DIRT, 3);
+        customBlockHits.put(Blocks.GRASS_BLOCK, 3);
+        customBlockHits.put(Blocks.SAND, 3);
+        customBlockHits.put(Blocks.GRAVEL, 3);
         customBlockHits.put(Blocks.GLASS, 1);
 
         customBlockHits.put(Blocks.STONE, 3);

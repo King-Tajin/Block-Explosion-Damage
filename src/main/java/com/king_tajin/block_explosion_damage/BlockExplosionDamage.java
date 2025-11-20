@@ -41,6 +41,8 @@ public class BlockExplosionDamage {
             return;
         }
 
+        // Clear the affected blocks list to prevent any blocks from breaking
+        // We'll handle everything through our damage system
         Iterator<BlockPos> iterator = event.getAffectedBlocks().iterator();
 
         while (iterator.hasNext()) {
@@ -49,6 +51,7 @@ public class BlockExplosionDamage {
 
             // Skip air and bedrock
             if (state.isAir() || state.is(Blocks.BEDROCK)) {
+                iterator.remove();
                 continue;
             }
 
@@ -62,7 +65,7 @@ public class BlockExplosionDamage {
             // Check if block should break
             if (currentDamage >= requiredHits) {
                 BlockDamageManager.removeDamage(serverLevel, pos);
-                // Leave in list to be destroyed
+                // Allow this block to break by leaving it in the list
             } else {
                 // Save damage with current timestamp
                 BlockDamageManager.setDamage(serverLevel, pos, currentDamage);
@@ -70,7 +73,8 @@ public class BlockExplosionDamage {
                 // Show visual feedback (mining cracks)
                 showDamageEffects(serverLevel, pos, currentDamage, requiredHits);
 
-                iterator.remove(); // Prevent destruction
+                // Remove from list to prevent breaking
+                iterator.remove();
             }
         }
     }
