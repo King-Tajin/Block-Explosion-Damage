@@ -45,6 +45,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
             BlockState state = level.getBlockState(pos);
             if (state.isAir()) {
                 iterator.remove();
+                level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
                 modified = true;
                 continue;
             }
@@ -54,8 +55,14 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
                 int newDamage = data.getDamage() - 1;
                 if (newDamage <= 0) {
                     iterator.remove();
+                    level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
                 } else {
                     entry.setValue(new BlockDamageData(newDamage, currentTime));
+
+                    // Update visual to show reduced damage
+                    int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
+                    int damageStage = Math.min(9, (int) ((float) newDamage / maxDamage * 10));
+                    level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
                 }
                 modified = true;
             }
