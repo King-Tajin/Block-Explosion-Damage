@@ -24,6 +24,7 @@ public class BlockDamageManager {
     );
 
     private static final Set<ChunkPos> dirtyChunks = new HashSet<>();
+    private static final Set<ChunkPos> damagedChunks = new HashSet<>();
 
     public static BlockDamageData getDamageData(ServerLevel level, BlockPos pos) {
         LevelChunk chunk = level.getChunkAt(pos);
@@ -36,7 +37,9 @@ public class BlockDamageManager {
         ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
         chunkData.setDamage(pos, damage, level.getGameTime());
         chunk.setUnsaved(true);
-        dirtyChunks.add(chunk.getPos());
+        ChunkPos chunkPos = chunk.getPos();
+        dirtyChunks.add(chunkPos);
+        damagedChunks.add(chunkPos);
     }
 
     public static void removeDamage(ServerLevel level, BlockPos pos) {
@@ -44,7 +47,12 @@ public class BlockDamageManager {
         ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
         chunkData.removeDamage(pos);
         chunk.setUnsaved(true);
-        dirtyChunks.add(chunk.getPos());
+        ChunkPos chunkPos = chunk.getPos();
+        dirtyChunks.add(chunkPos);
+
+        if (chunkData.isEmpty()) {
+            damagedChunks.remove(chunkPos);
+        }
     }
 
     public static void processDecay(ServerLevel level) {
@@ -74,7 +82,26 @@ public class BlockDamageManager {
 
             if (chunkData.isEmpty()) {
                 iterator.remove();
+                damagedChunks.remove(chunkPos);
             }
+        }
+    }
+
+    public static void refreshVisuals(ServerLevel level) {
+        for (ChunkPos chunkPos : damagedChunks) {
+            if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
+                continue;
+            }
+
+            LevelChunk chunk = level.getChunk(chunkPos.x, chunkPos.z);
+            ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
+            chunkData.refreshVisuals(level);
+        }
+    }
+
+    public static void registerLoadedChunk(ChunkPos chunkPos, ChunkDamageData chunkData) {
+        if (!chunkData.isEmpty()) {
+            damagedChunks.add(chunkPos);
         }
     }
 }

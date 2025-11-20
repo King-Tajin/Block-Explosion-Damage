@@ -7,6 +7,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,6 +32,22 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
 
     public boolean isEmpty() {
         return damageMap.isEmpty();
+    }
+
+    public void refreshVisuals(ServerLevel level) {
+        for (Map.Entry<BlockPos, BlockDamageData> entry : damageMap.entrySet()) {
+            BlockPos pos = entry.getKey();
+            BlockDamageData data = entry.getValue();
+
+            BlockState state = level.getBlockState(pos);
+            if (state.isAir()) {
+                continue;
+            }
+
+            int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
+            int damageStage = Math.min(9, (int) ((float) data.getDamage() / maxDamage * 10));
+            level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
+        }
     }
 
     public boolean processDecay(ServerLevel level, long currentTime, int decayTime) {
@@ -59,7 +76,6 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
                 } else {
                     entry.setValue(new BlockDamageData(newDamage, currentTime));
 
-                    // Update visual to show reduced damage
                     int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
                     int damageStage = Math.min(9, (int) ((float) newDamage / maxDamage * 10));
                     level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
@@ -72,7 +88,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
     }
 
     @Override
-    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+    public CompoundTag serializeNBT(HolderLookup.@NotNull Provider provider) {
         CompoundTag tag = new CompoundTag();
         ListTag listTag = new ListTag();
 
@@ -95,7 +111,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
     }
 
     @Override
-    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
+    public void deserializeNBT(HolderLookup.@NotNull Provider provider, CompoundTag tag) {
         damageMap.clear();
 
         ListTag listTag = tag.getList("blocks", Tag.TAG_COMPOUND);

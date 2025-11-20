@@ -1,10 +1,12 @@
 package com.king_tajin.block_explosion_damage;
 
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.minecraft.core.BlockPos;
@@ -31,6 +33,14 @@ public class BlockExplosionDamage {
     private void commonSetup(final FMLCommonSetupEvent event) {
         // Load config
         ModConfig.init();
+    }
+
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel && event.getChunk() instanceof LevelChunk chunk) {
+            ChunkDamageData chunkData = chunk.getData(BlockDamageManager.CHUNK_DAMAGE);
+            BlockDamageManager.registerLoadedChunk(chunk.getPos(), chunkData);
+        }
     }
 
     @SubscribeEvent
@@ -85,6 +95,10 @@ public class BlockExplosionDamage {
             // Every 20 ticks (1 second), process decay
             if (serverLevel.getGameTime() % 20 == 0) {
                 BlockDamageManager.processDecay(serverLevel);
+            }
+
+            if (serverLevel.getGameTime() % 10 == 0) {
+                BlockDamageManager.refreshVisuals(serverLevel);
             }
         }
     }
