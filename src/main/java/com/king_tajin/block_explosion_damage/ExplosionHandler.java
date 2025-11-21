@@ -5,6 +5,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.HitResult;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,11 +24,11 @@ public class ExplosionHandler {
 
         int radiusInt = (int) Math.ceil(radius);
         BlockPos explosionPos = BlockPos.containing(explosionX, explosionY, explosionZ);
+        Vec3 explosionCenter = new Vec3(explosionX, explosionY, explosionZ);
 
         Set<BlockPos> alreadyProcessed = new HashSet<>();
         Set<BlockPos> blocksToBreak = new HashSet<>();
 
-        // First pass: process all blocks in explosion radius
         for (int x = -radiusInt; x <= radiusInt; x++) {
             for (int y = -radiusInt; y <= radiusInt; y++) {
                 for (int z = -radiusInt; z <= radiusInt; z++) {
@@ -36,6 +39,12 @@ public class ExplosionHandler {
                         BlockState state = level.getBlockState(checkPos);
 
                         if (!state.isAir() && !state.is(Blocks.BEDROCK) && !state.is(Blocks.TNT)) {
+
+                            // Check if bedrock is blocking the explosion
+                            if (isBlockedByBedrock(level, explosionCenter, checkPos)) {
+                                continue;
+                            }
+
                             int damageAmount = calculateDamage(distance, radius);
 
                             if (applyBlockDamage(level, checkPos, state, damageAmount)) {
@@ -49,7 +58,6 @@ public class ExplosionHandler {
             }
         }
 
-        // Second pass: update the affected blocks list
         Iterator<BlockPos> iterator = affectedBlocks.iterator();
 
         while (iterator.hasNext()) {
@@ -65,18 +73,41 @@ public class ExplosionHandler {
                 continue;
             }
 
-            // If we didn't process this in the first pass, remove it
             if (!blocksToBreak.contains(pos)) {
                 iterator.remove();
             }
         }
 
-        // Add any blocks that should break but weren't in the original list
         for (BlockPos pos : blocksToBreak) {
             if (!affectedBlocks.contains(pos)) {
                 affectedBlocks.add(pos);
             }
         }
+    }
+
+    private static boolean isBlockedByBedrock(ServerLevel level, Vec3 explosionCenter, BlockPos targetPos) {
+        Vec3 targetCenter = Vec3.atCenterOf(targetPos);
+        Vec3 direction = targetCenter.subtract(explosionCenter).normalize();
+        double distance = explosionCenter.distanceTo(targetCenter);
+
+        // Step through the ray in small increments
+        double step = 0.5;
+        for (double d = 0; d < distance; d += step) {
+            Vec3 checkPoint = explosionCenter.add(direction.scale(d));
+            BlockPos checkPos = BlockPos.containing(checkPoint);
+
+            // Don't check the target position itself
+            if (checkPos.equals(targetPos)) {
+                continue;
+            }
+
+            BlockState state = level.getBlockState(checkPos);
+            if (state.is(Blocks.BEDROCK)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int calculateDamage(double distance, float radius) {
