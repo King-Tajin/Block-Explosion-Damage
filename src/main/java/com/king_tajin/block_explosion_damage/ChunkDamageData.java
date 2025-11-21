@@ -130,4 +130,16 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
             damageMap.put(pos, new BlockDamageData(damage, time));
         }
     }
+
+    public int clearAllDamage(ServerLevel level) {
+        int count = damageMap.size();
+
+        for (BlockPos pos : damageMap.keySet()) {
+            level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
+        }
+
+        damageMap.clear();
+
+        return count;
+    }
 }

@@ -6,16 +6,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
-
-import java.util.Iterator;
 
 @Mod("block_explosion_damage")
 public class BlockExplosionDamage {
@@ -36,6 +32,11 @@ public class BlockExplosionDamage {
     }
 
     @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        ClearDamageCommand.register(event.getDispatcher());
+    }
+
+    @SubscribeEvent
     public void onChunkLoad(ChunkEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel && event.getChunk() instanceof LevelChunk chunk) {
             ChunkDamageData chunkData = chunk.getData(BlockDamageManager.CHUNK_DAMAGE);
@@ -50,40 +51,7 @@ public class BlockExplosionDamage {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
-
-        Iterator<BlockPos> iterator = event.getAffectedBlocks().iterator();
-
-        while (iterator.hasNext()) {
-            BlockPos pos = iterator.next();
-            BlockState state = level.getBlockState(pos);
-
-            if (state.isAir() || state.is(Blocks.BEDROCK)) {
-                iterator.remove();
-                continue;
-            }
-
-            if (state.is(Blocks.TNT)) {
-                continue;
-            }
-
-            int requiredHits = ModConfig.getHitsForBlock(state.getBlock());
-
-            BlockDamageData damageData = BlockDamageManager.getDamageData(serverLevel, pos);
-            int currentDamage = damageData.getDamage() + 1;
-
-            // Check if block should break
-            if (currentDamage >= requiredHits) {
-                BlockDamageManager.removeDamage(serverLevel, pos);
-
-            } else {
-                BlockDamageManager.setDamage(serverLevel, pos, currentDamage);
-
-                showDamageEffects(serverLevel, pos, currentDamage, requiredHits);
-
-                // Remove from list to prevent breaking
-                iterator.remove();
-            }
-        }
+        ExplosionHandler.handleExplosion(serverLevel, event.getExplosion(), event.getAffectedBlocks());
     }
 
     @SubscribeEvent
@@ -100,11 +68,4 @@ public class BlockExplosionDamage {
         }
     }
 
-    private void showDamageEffects(ServerLevel level, BlockPos pos, int damage, int maxDamage) {
-        // Calculate damage stage (0-9 like block breaking animation)
-        int damageStage = Math.min(9, (int) ((float) damage / maxDamage * 10));
-
-        // Send block damage packet to all players
-        level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
-    }
 }

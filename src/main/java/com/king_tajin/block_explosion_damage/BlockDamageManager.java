@@ -104,4 +104,25 @@ public class BlockDamageManager {
             damagedChunks.add(chunkPos);
         }
     }
+
+    public static int clearAllDamage(ServerLevel level) {
+        int totalCleared = 0;
+
+        for (ChunkPos chunkPos : damagedChunks) {
+            if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
+                continue;
+            }
+
+            LevelChunk chunk = level.getChunk(chunkPos.x, chunkPos.z);
+            ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
+
+            totalCleared += chunkData.clearAllDamage(level);
+            chunk.setUnsaved(true);
+        }
+
+        damagedChunks.clear();
+        dirtyChunks.clear();
+
+        return totalCleared;
+    }
 }
