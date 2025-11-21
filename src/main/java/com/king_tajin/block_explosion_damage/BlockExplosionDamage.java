@@ -51,36 +51,33 @@ public class BlockExplosionDamage {
             return;
         }
 
-        // Clear the affected blocks list to prevent any blocks from breaking
-        // We'll handle everything through our damage system
         Iterator<BlockPos> iterator = event.getAffectedBlocks().iterator();
 
         while (iterator.hasNext()) {
             BlockPos pos = iterator.next();
             BlockState state = level.getBlockState(pos);
 
-            // Skip air and bedrock
             if (state.isAir() || state.is(Blocks.BEDROCK)) {
                 iterator.remove();
                 continue;
             }
 
-            // Get required hits for this block type
+            if (state.is(Blocks.TNT)) {
+                continue;
+            }
+
             int requiredHits = ModConfig.getHitsForBlock(state.getBlock());
 
-            // Get current damage
             BlockDamageData damageData = BlockDamageManager.getDamageData(serverLevel, pos);
             int currentDamage = damageData.getDamage() + 1;
 
             // Check if block should break
             if (currentDamage >= requiredHits) {
                 BlockDamageManager.removeDamage(serverLevel, pos);
-                // Allow this block to break by leaving it in the list
+
             } else {
-                // Save damage with current timestamp
                 BlockDamageManager.setDamage(serverLevel, pos, currentDamage);
 
-                // Show visual feedback (mining cracks)
                 showDamageEffects(serverLevel, pos, currentDamage, requiredHits);
 
                 // Remove from list to prevent breaking
