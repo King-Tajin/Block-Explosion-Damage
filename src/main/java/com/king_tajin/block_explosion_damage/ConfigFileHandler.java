@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.fml.loading.FMLPaths;
 import net.minecraft.core.registries.BuiltInRegistries;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
@@ -76,26 +77,51 @@ public class ConfigFileHandler {
 
     public static void saveConfig(ConfigData config) {
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
-            JsonObject json = new JsonObject();
-            json.addProperty("defaultHitsMultiplier", config.defaultHitsMultiplier);
-            json.addProperty("damageDecayTime", config.damageDecayTime);
 
-            JsonObject customHits = new JsonObject();
-            for (Map.Entry<String, Integer> entry : config.customBlockHits.entrySet()) {
-                customHits.addProperty(entry.getKey(), entry.getValue());
-            }
-            json.add("customBlockHits", customHits);
+            writer.write("// Block Explosion Damage Configuration\n");
+            writer.write("// \n");
+            writer.write("// defaultHitsMultiplier: Multiplier applied to block hardness to calculate required hits.\n");
+            writer.write("//   - Higher values = blocks need more hits to break\n");
+            writer.write("// \n");
+            writer.write("// damageDecayTime: Time in ticks before damage heals by 1 hit (20 ticks = 1 second)\n");
+            writer.write("//   - 6000 ticks = 5 minutes\n");
+            writer.write("//   - Note: Can be disabled with /gamerule tntBlockDamageDecay false\n");
+            writer.write("// \n");
+            writer.write("// customBlockHits: Override specific blocks to require exact number of hits\n");
+            writer.write("//   - Format: \"minecraft:block_name\": number_of_hits\n");
+            writer.write("//   - These override the defaultHitsMultiplier calculation\n");
+            writer.write("// \n");
+            writer.write("// protectiveBlocks: Blocks that shield other blocks from explosion damage\n");
+            writer.write("//   - Blocks behind these won't take damage from explosions\n");
+            writer.write("//   - Format: \"minecraft:block_name\n");
+            writer.write("// \n");
+            writer.write("\n");
 
-            JsonObject protectiveBlocksJson = new JsonObject();
-            for (String blockId : config.protectiveBlocks) {
-                protectiveBlocksJson.addProperty(blockId, true);
-            }
-            json.add("protectiveBlocks", protectiveBlocksJson);
+            JsonObject json = getJsonObject(config);
 
             GSON.toJson(json, writer);
         } catch (IOException e) {
             System.err.println("Failed to save TNT Multi-Hit config: " + e.getMessage());
         }
+    }
+
+    private static @NotNull JsonObject getJsonObject(ConfigData config) {
+        JsonObject json = new JsonObject();
+        json.addProperty("defaultHitsMultiplier", config.defaultHitsMultiplier);
+        json.addProperty("damageDecayTime", config.damageDecayTime);
+
+        JsonObject customHits = new JsonObject();
+        for (Map.Entry<String, Integer> entry : config.customBlockHits.entrySet()) {
+            customHits.addProperty(entry.getKey(), entry.getValue());
+        }
+        json.add("customBlockHits", customHits);
+
+        JsonObject protectiveBlocksJson = new JsonObject();
+        for (String blockId : config.protectiveBlocks) {
+            protectiveBlocksJson.addProperty(blockId, true);
+        }
+        json.add("protectiveBlocks", protectiveBlocksJson);
+        return json;
     }
 
     public static Block getBlockFromString(String blockId) {

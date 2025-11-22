@@ -55,10 +55,6 @@ public class ModConfig {
         return protectiveBlocks.contains(block);
     }
 
-    public static double getDefaultHitsMultiplier() {
-        return defaultHitsMultiplier;
-    }
-
     public static int getDamageDecayTime() {
         return damageDecayTime;
     }

@@ -19,7 +19,6 @@ public class BlockExplosionDamage {
     public BlockExplosionDamage(IEventBus modEventBus) {
         modEventBus.addListener(this::commonSetup);
 
-        // Register attachment types
         BlockDamageManager.ATTACHMENT_TYPES.register(modEventBus);
 
         NeoForge.EVENT_BUS.register(this);
@@ -27,8 +26,8 @@ public class BlockExplosionDamage {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        // Load config
         ModConfig.init();
+        ModGameRules.register();
     }
 
     @SubscribeEvent

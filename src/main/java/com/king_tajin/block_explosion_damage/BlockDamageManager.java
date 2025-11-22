@@ -53,6 +53,11 @@ public class BlockDamageManager {
     }
 
     public static void processDecay(ServerLevel level) {
+
+        if (!level.getGameRules().getBoolean(ModGameRules.RULE_BLOCK_DAMAGE_DECAY)) {
+            return;
+        }
+
         long currentTime = level.getGameTime();
         int decayTime = ModConfig.getDamageDecayTime();
 
