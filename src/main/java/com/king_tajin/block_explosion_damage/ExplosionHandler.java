@@ -33,7 +33,18 @@ public class ExplosionHandler {
                     BlockPos checkPos = explosionPos.offset(x, y, z);
                     double distance = Math.sqrt(x * x + y * y + z * z);
 
-                    if (shouldProcessBlock(level, explosionCenter, checkPos, distance, radius)) {
+                    if (distance > radius) {
+                        continue;
+                    }
+
+                    BlockState state = level.getBlockState(checkPos);
+
+                    if (state.is(Blocks.TNT)) {
+                        blocksToBreak.add(checkPos);
+                        continue;
+                    }
+
+                    if (shouldProcessBlock(level, explosionCenter, checkPos, distance, radius, state)) {
                         int damageAmount = calculateDamageAmount(distance, radius);
 
                         if (applyBlockDamage(level, checkPos, damageAmount)) {
@@ -47,14 +58,8 @@ public class ExplosionHandler {
         return blocksToBreak;
     }
 
-    private static boolean shouldProcessBlock(ServerLevel level, Vec3 explosionCenter, BlockPos pos, double distance, float radius) {
-        if (distance > radius) {
-            return false;
-        }
-
-        BlockState state = level.getBlockState(pos);
-
-        if (state.isAir() || state.is(Blocks.BEDROCK) || state.is(Blocks.TNT)) {
+    private static boolean shouldProcessBlock(ServerLevel level, Vec3 explosionCenter, BlockPos pos, double distance, float radius, BlockState state) {
+        if (state.isAir() || state.is(Blocks.BEDROCK)) {
             return false;
         }
 
