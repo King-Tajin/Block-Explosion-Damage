@@ -23,7 +23,6 @@ public class BlockDamageManager {
             () -> AttachmentType.serializable(ChunkDamageData::new).build()
     );
 
-    private static final Set<ChunkPos> dirtyChunks = new HashSet<>();
     private static final Set<ChunkPos> damagedChunks = new HashSet<>();
 
     public static BlockDamageData getDamageData(ServerLevel level, BlockPos pos) {
@@ -38,7 +37,6 @@ public class BlockDamageManager {
         chunkData.setDamage(pos, damage, level.getGameTime());
         chunk.setUnsaved(true);
         ChunkPos chunkPos = chunk.getPos();
-        dirtyChunks.add(chunkPos);
         damagedChunks.add(chunkPos);
     }
 
@@ -48,7 +46,6 @@ public class BlockDamageManager {
         chunkData.removeDamage(pos);
         chunk.setUnsaved(true);
         ChunkPos chunkPos = chunk.getPos();
-        dirtyChunks.add(chunkPos);
 
         if (chunkData.isEmpty()) {
             damagedChunks.remove(chunkPos);
@@ -63,12 +60,11 @@ public class BlockDamageManager {
             return;
         }
 
-        Iterator<ChunkPos> iterator = dirtyChunks.iterator();
+        Iterator<ChunkPos> iterator = damagedChunks.iterator();
         while (iterator.hasNext()) {
             ChunkPos chunkPos = iterator.next();
 
-            if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
-                iterator.remove();
+            if (!level.getChunkSource().hasChunk(chunkPos.x, chunkPos.z)) {
                 continue;
             }
 
@@ -82,14 +78,13 @@ public class BlockDamageManager {
 
             if (chunkData.isEmpty()) {
                 iterator.remove();
-                damagedChunks.remove(chunkPos);
             }
         }
     }
 
     public static void refreshVisuals(ServerLevel level) {
         for (ChunkPos chunkPos : damagedChunks) {
-            if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
+            if (!level.getChunkSource().hasChunk(chunkPos.x, chunkPos.z)) {
                 continue;
             }
 
@@ -109,7 +104,7 @@ public class BlockDamageManager {
         int totalCleared = 0;
 
         for (ChunkPos chunkPos : damagedChunks) {
-            if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
+            if (!level.getChunkSource().hasChunk(chunkPos.x, chunkPos.z)) {
                 continue;
             }
 
@@ -121,7 +116,6 @@ public class BlockDamageManager {
         }
 
         damagedChunks.clear();
-        dirtyChunks.clear();
 
         return totalCleared;
     }

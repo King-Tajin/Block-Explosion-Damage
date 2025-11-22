@@ -9,7 +9,7 @@ import java.util.Map;
 public class ModConfig {
 
     private static int defaultHits = 12;
-    private static int damageDecayTime = 6000;
+    private static int damageDecayTime = 120;
     private static final Map<Block, Integer> customBlockHits = new HashMap<>();
 
     public static void init() {
