@@ -4,13 +4,16 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ModConfig {
 
     private static int defaultHits = 12;
-    private static int damageDecayTime = 120;
+    private static int damageDecayTime = 2400;
     private static final Map<Block, Integer> customBlockHits = new HashMap<>();
+    private static final Set<Block> protectiveBlocks = new HashSet<>();
 
     public static void init() {
         customBlockHits.put(Blocks.DIRT, 6);
@@ -56,10 +59,19 @@ public class ModConfig {
 
         customBlockHits.put(Blocks.DEEPSLATE, 4);
         customBlockHits.put(Blocks.COBBLED_DEEPSLATE, 4);
+
+
+        protectiveBlocks.add(Blocks.BEDROCK);
+        protectiveBlocks.add(Blocks.BARRIER);
+        protectiveBlocks.add(Blocks.REINFORCED_DEEPSLATE);
     }
 
     public static int getHitsForBlock(Block block) {
         return customBlockHits.getOrDefault(block, defaultHits);
+    }
+
+    public static boolean isProtectiveBlock(Block block) {
+        return protectiveBlocks.contains(block);
     }
 
     public static int getDefaultHits() {
