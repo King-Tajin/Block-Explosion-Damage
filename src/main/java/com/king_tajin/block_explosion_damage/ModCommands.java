@@ -7,14 +7,37 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
-public class ClearDamageCommand {
+public class ModCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("cleardamage")
                         .requires(source -> source.hasPermission(2))
-                        .executes(ClearDamageCommand::clearAllDamage)
+                        .then(Commands.literal("reload")
+                                .executes(ModCommands::reloadConfig)
+                        )
+                        .then(Commands.literal("cleardamage")
+                                .executes(ModCommands::clearAllDamage)
+                        )
         );
+    }
+
+    private static int reloadConfig(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+
+        try {
+            ModConfig.init();
+            source.sendSuccess(
+                    () -> Component.literal("§aBlock Explosion Damage config reloaded successfully!"),
+                    true
+            );
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(
+                    Component.literal("§cFailed to reload config: " + e.getMessage())
+            );
+            return 0;
+        }
     }
 
     private static int clearAllDamage(CommandContext<CommandSourceStack> context) {

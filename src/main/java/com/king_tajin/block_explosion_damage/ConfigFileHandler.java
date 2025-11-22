@@ -80,6 +80,8 @@ public class ConfigFileHandler {
 
             writer.write("// Block Explosion Damage Configuration\n");
             writer.write("// \n");
+            writer.write("// If server is running while config is changed, use /block_explosion_damage reload\n");
+            writer.write("// \n");
             writer.write("// defaultHitsMultiplier: Multiplier applied to block hardness to calculate required hits.\n");
             writer.write("//   - Higher values = blocks need more hits to break\n");
             writer.write("// \n");

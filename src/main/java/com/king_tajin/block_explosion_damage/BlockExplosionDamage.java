@@ -32,7 +32,7 @@ public class BlockExplosionDamage {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        ClearDamageCommand.register(event.getDispatcher());
+        ModCommands.register(event.getDispatcher());
     }
 
     @SubscribeEvent
