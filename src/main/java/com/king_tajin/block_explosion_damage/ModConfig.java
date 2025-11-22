@@ -10,56 +10,15 @@ import java.util.Set;
 
 public class ModConfig {
 
-    private static int defaultHits = 12;
+    private static final double defaultHitsMultiplier = 6.0;
     private static int damageDecayTime = 2400;
     private static final Map<Block, Integer> customBlockHits = new HashMap<>();
     private static final Set<Block> protectiveBlocks = new HashSet<>();
 
     public static void init() {
-        customBlockHits.put(Blocks.DIRT, 6);
-        customBlockHits.put(Blocks.GRASS_BLOCK, 6);
-        customBlockHits.put(Blocks.SAND, 6);
-        customBlockHits.put(Blocks.GRAVEL, 6);
         customBlockHits.put(Blocks.GLASS, 2);
-
-        customBlockHits.put(Blocks.STONE, 3);
-        customBlockHits.put(Blocks.COBBLESTONE, 3);
-        customBlockHits.put(Blocks.OAK_PLANKS, 3);
-        customBlockHits.put(Blocks.SPRUCE_PLANKS, 3);
-        customBlockHits.put(Blocks.BIRCH_PLANKS, 3);
-        customBlockHits.put(Blocks.JUNGLE_PLANKS, 3);
-        customBlockHits.put(Blocks.ACACIA_PLANKS, 3);
-        customBlockHits.put(Blocks.DARK_OAK_PLANKS, 3);
-
-        customBlockHits.put(Blocks.IRON_BLOCK, 5);
-        customBlockHits.put(Blocks.GOLD_BLOCK, 4);
-        customBlockHits.put(Blocks.DIAMOND_BLOCK, 6);
-        customBlockHits.put(Blocks.EMERALD_BLOCK, 6);
-        customBlockHits.put(Blocks.NETHERITE_BLOCK, 8);
-
-        customBlockHits.put(Blocks.COAL_ORE, 3);
-        customBlockHits.put(Blocks.IRON_ORE, 4);
-        customBlockHits.put(Blocks.GOLD_ORE, 4);
-        customBlockHits.put(Blocks.DIAMOND_ORE, 5);
-        customBlockHits.put(Blocks.EMERALD_ORE, 5);
-        customBlockHits.put(Blocks.DEEPSLATE_COAL_ORE, 4);
-        customBlockHits.put(Blocks.DEEPSLATE_IRON_ORE, 5);
-        customBlockHits.put(Blocks.DEEPSLATE_GOLD_ORE, 5);
-        customBlockHits.put(Blocks.DEEPSLATE_DIAMOND_ORE, 6);
-
-        customBlockHits.put(Blocks.OBSIDIAN, 10);
-        customBlockHits.put(Blocks.CRYING_OBSIDIAN, 10);
-
-        customBlockHits.put(Blocks.END_STONE, 4);
-        customBlockHits.put(Blocks.PURPUR_BLOCK, 4);
-
-        customBlockHits.put(Blocks.NETHERRACK, 2);
-        customBlockHits.put(Blocks.NETHER_BRICKS, 4);
-        customBlockHits.put(Blocks.BLACKSTONE, 4);
-
-        customBlockHits.put(Blocks.DEEPSLATE, 4);
-        customBlockHits.put(Blocks.COBBLED_DEEPSLATE, 4);
-
+        customBlockHits.put(Blocks.OBSIDIAN, 12);
+        customBlockHits.put(Blocks.CRYING_OBSIDIAN, 12);
 
         protectiveBlocks.add(Blocks.BEDROCK);
         protectiveBlocks.add(Blocks.BARRIER);
@@ -67,19 +26,21 @@ public class ModConfig {
     }
 
     public static int getHitsForBlock(Block block) {
-        return customBlockHits.getOrDefault(block, defaultHits);
+        if (customBlockHits.containsKey(block)) {
+            return customBlockHits.get(block);
+        }
+
+        float hardness = block.defaultDestroyTime();
+
+        if (hardness < 0) {
+            return 999;
+        }
+
+        return Math.max(1, (int) Math.ceil(hardness * defaultHitsMultiplier));
     }
 
     public static boolean isProtectiveBlock(Block block) {
         return protectiveBlocks.contains(block);
-    }
-
-    public static int getDefaultHits() {
-        return defaultHits;
-    }
-
-    public static void setDefaultHits(int hits) {
-        defaultHits = Math.max(1, hits);
     }
 
     public static int getDamageDecayTime() {
