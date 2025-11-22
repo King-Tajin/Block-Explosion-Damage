@@ -59,7 +59,11 @@ public class ExplosionHandler {
     }
 
     private static boolean shouldProcessBlock(ServerLevel level, Vec3 explosionCenter, BlockPos pos, double distance, float radius, BlockState state) {
-        if (state.isAir() || state.is(Blocks.BEDROCK)) {
+        if (state.isAir()) {
+            return false;
+        }
+
+        if (ModConfig.isProtectiveBlock(state.getBlock())) {
             return false;
         }
 
