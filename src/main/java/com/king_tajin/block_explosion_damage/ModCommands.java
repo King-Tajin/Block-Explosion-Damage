@@ -11,7 +11,7 @@ public class ModCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("cleardamage")
+                Commands.literal("block_explosion_damage")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("reload")
                                 .executes(ModCommands::reloadConfig)
