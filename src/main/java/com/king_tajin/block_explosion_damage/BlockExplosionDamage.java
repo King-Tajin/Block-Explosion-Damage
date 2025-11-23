@@ -1,5 +1,6 @@
 package com.king_tajin.block_explosion_damage;
 
+import com.king_tajin.block_explosion_damage.config.ModConfig;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;

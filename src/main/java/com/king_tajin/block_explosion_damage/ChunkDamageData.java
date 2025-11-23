@@ -1,5 +1,6 @@
 package com.king_tajin.block_explosion_damage;
 
+import com.king_tajin.block_explosion_damage.config.ModConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;

@@ -1,4 +1,4 @@
-package com.king_tajin.block_explosion_damage;
+package com.king_tajin.block_explosion_damage.config;
 
 import net.minecraft.world.level.block.Block;
 

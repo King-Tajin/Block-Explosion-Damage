@@ -1,5 +1,6 @@
 package com.king_tajin.block_explosion_damage;
 
+import com.king_tajin.block_explosion_damage.config.ModConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
