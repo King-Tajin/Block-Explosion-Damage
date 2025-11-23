@@ -18,27 +18,8 @@ public class ExplosionHandler {
         Vec3 explosionCenter = explosion.center();
         float radius = explosion.radius();
 
-        boolean underwater = false;
-
-        Vec3[] samples = new Vec3[]{
-                explosionCenter,
-                explosionCenter.add(0.25, 0, 0),
-                explosionCenter.add(-0.25, 0, 0),
-                explosionCenter.add(0, 0.25, 0),
-                explosionCenter.add(0, -0.25, 0),
-                explosionCenter.add(0, 0, 0.25),
-                explosionCenter.add(0, 0, -0.25)
-        };
-
-        for (Vec3 sample : samples) {
-            BlockPos pos = BlockPos.containing(sample);
-            if (!level.getFluidState(pos).isEmpty()) {
-                underwater = true;
-                break;
-            }
-        }
-
-        if (underwater) {
+        BlockPos explosionPos = BlockPos.containing(explosionCenter.x, explosionCenter.y, explosionCenter.z);
+        if (!level.getFluidState(explosionPos).isEmpty()) {
             affectedBlocks.clear();
             return;
         }
