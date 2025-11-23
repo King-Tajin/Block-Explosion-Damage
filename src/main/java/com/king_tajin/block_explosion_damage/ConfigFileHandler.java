@@ -65,6 +65,7 @@ public class ConfigFileHandler {
         config.customBlockHits.put("minecraft:crying_obsidian", 12);
 
         config.protectiveBlocks.add("minecraft:barrier");
+        config.protectiveBlocks.add("minecraft:bedrock");
         config.protectiveBlocks.add("minecraft:command_block");
         config.protectiveBlocks.add("minecraft:chain_command_block");
         config.protectiveBlocks.add("minecraft:repeating_command_block");

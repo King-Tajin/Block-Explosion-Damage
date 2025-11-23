@@ -8,7 +8,6 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +49,7 @@ public class ExplosionHandler {
                         continue;
                     }
 
-                    if (shouldProcessBlock(level, explosionCenter, checkPos, distance, radius, state)) {
+                    if (shouldProcessBlock(level, explosionCenter, checkPos, state)) {
                         int damageAmount = calculateDamageAmount(distance, radius);
 
                         if (applyBlockDamage(level, checkPos, damageAmount)) {
@@ -64,7 +63,7 @@ public class ExplosionHandler {
         return blocksToBreak;
     }
 
-    private static boolean shouldProcessBlock(ServerLevel level, Vec3 explosionCenter, BlockPos pos, double distance, float radius, BlockState state) {
+    private static boolean shouldProcessBlock(ServerLevel level, Vec3 explosionCenter, BlockPos pos, BlockState state) {
         if (state.isAir()) {
             return false;
         }
@@ -111,7 +110,7 @@ public class ExplosionHandler {
         BlockState state = level.getBlockState(pos);
         int requiredHits = ModConfig.getHitsForBlock(state.getBlock());
         BlockDamageData damageData = BlockDamageManager.getDamageData(level, pos);
-        int currentDamage = damageData.getDamage() + damageAmount;
+        int currentDamage = damageData.damage() + damageAmount;
 
         if (currentDamage >= requiredHits) {
             BlockDamageManager.removeDamage(level, pos);
@@ -124,15 +123,8 @@ public class ExplosionHandler {
     }
 
     private static void updateAffectedBlocksList(List<BlockPos> affectedBlocks, Set<BlockPos> blocksToBreak) {
-        Iterator<BlockPos> iterator = affectedBlocks.iterator();
 
-        while (iterator.hasNext()) {
-            BlockPos pos = iterator.next();
-
-            if (!blocksToBreak.contains(pos)) {
-                iterator.remove();
-            }
-        }
+        affectedBlocks.removeIf(pos -> !blocksToBreak.contains(pos));
 
         for (BlockPos pos : blocksToBreak) {
             if (!affectedBlocks.contains(pos)) {

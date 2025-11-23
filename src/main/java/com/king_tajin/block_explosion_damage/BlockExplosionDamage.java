@@ -56,7 +56,6 @@ public class BlockExplosionDamage {
     @SubscribeEvent
     public void onLevelTick(LevelTickEvent.Post event) {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
-            // Every 20 ticks (1 second), process decay
             if (serverLevel.getGameTime() % 20 == 0) {
                 BlockDamageManager.processDecay(serverLevel);
             }

@@ -45,7 +45,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
             }
 
             int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
-            int damageStage = Math.min(9, (int) ((float) data.getDamage() / maxDamage * 10));
+            int damageStage = Math.min(9, (int) ((float) data.damage() / maxDamage * 10));
             level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
         }
     }
@@ -67,9 +67,9 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
                 continue;
             }
 
-            long timeSinceDamage = currentTime - data.getLastDamageTime();
+            long timeSinceDamage = currentTime - data.lastDamageTime();
             if (timeSinceDamage >= decayTime) {
-                int newDamage = data.getDamage() - 1;
+                int newDamage = data.damage() - 1;
                 if (newDamage <= 0) {
                     iterator.remove();
                     level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
@@ -100,8 +100,8 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
             entryTag.putInt("x", pos.getX());
             entryTag.putInt("y", pos.getY());
             entryTag.putInt("z", pos.getZ());
-            entryTag.putInt("damage", data.getDamage());
-            entryTag.putLong("time", data.getLastDamageTime());
+            entryTag.putInt("damage", data.damage());
+            entryTag.putLong("time", data.lastDamageTime());
 
             listTag.add(entryTag);
         }
