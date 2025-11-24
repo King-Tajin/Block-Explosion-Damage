@@ -21,7 +21,9 @@ public class BlockDamageManager {
 
     public static final Supplier<AttachmentType<ChunkDamageData>> CHUNK_DAMAGE = ATTACHMENT_TYPES.register(
             "chunk_damage",
-            () -> AttachmentType.serializable(ChunkDamageData::new).build()
+            () -> AttachmentType.builder(ChunkDamageData::new)
+                    .serialize(ChunkDamageData.CODEC)
+                    .build()
     );
 
     private static final Set<ChunkPos> damagedChunks = new HashSet<>();

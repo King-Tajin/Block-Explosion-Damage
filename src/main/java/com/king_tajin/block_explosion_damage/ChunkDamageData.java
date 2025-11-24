@@ -1,23 +1,37 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTSerializable<CompoundTag> {
-    private final Map<BlockPos, BlockDamageData> damageMap = new HashMap<>();
+public class ChunkDamageData {
 
-    public ChunkDamageData() {}
+    public static final MapCodec<ChunkDamageData> CODEC = RecordCodecBuilder.mapCodec(instance ->
+            instance.group(
+                    Codec.unboundedMap(
+                            BlockPos.CODEC,
+                            BlockDamageData.CODEC
+                    ).fieldOf("damageMap").forGetter(data -> data.damageMap)
+            ).apply(instance, ChunkDamageData::new)
+    );
+
+    private final Map<BlockPos, BlockDamageData> damageMap;
+
+    public ChunkDamageData() {
+        this.damageMap = new HashMap<>();
+    }
+
+    private ChunkDamageData(Map<BlockPos, BlockDamageData> damageMap) {
+        this.damageMap = new HashMap<>(damageMap);
+    }
 
     public BlockDamageData getDamage(BlockPos pos) {
         return damageMap.getOrDefault(pos, new BlockDamageData(0, 0));
@@ -49,6 +63,18 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
             int damageStage = Math.min(9, (int) ((float) data.damage() / maxDamage * 10));
             level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
         }
+    }
+
+    public int clearAllDamage(ServerLevel level) {
+        int count = damageMap.size();
+
+        for (BlockPos pos : damageMap.keySet()) {
+            level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
+        }
+
+        damageMap.clear();
+
+        return count;
     }
 
     public boolean processDecay(ServerLevel level, long currentTime, int decayTime) {
@@ -86,61 +112,5 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
         }
 
         return modified;
-    }
-
-    @Override
-    public CompoundTag serializeNBT(HolderLookup.@NotNull Provider provider) {
-        CompoundTag tag = new CompoundTag();
-        ListTag listTag = new ListTag();
-
-        for (Map.Entry<BlockPos, BlockDamageData> entry : damageMap.entrySet()) {
-            CompoundTag entryTag = new CompoundTag();
-            BlockPos pos = entry.getKey();
-            BlockDamageData data = entry.getValue();
-
-            entryTag.putInt("x", pos.getX());
-            entryTag.putInt("y", pos.getY());
-            entryTag.putInt("z", pos.getZ());
-            entryTag.putInt("damage", data.damage());
-            entryTag.putLong("time", data.lastDamageTime());
-
-            listTag.add(entryTag);
-        }
-
-        tag.put("blocks", listTag);
-        return tag;
-    }
-
-    @Override
-    public void deserializeNBT(HolderLookup.@NotNull Provider provider, CompoundTag tag) {
-        damageMap.clear();
-
-        ListTag listTag = tag.getList("blocks", Tag.TAG_COMPOUND);
-        for (int i = 0; i < listTag.size(); i++) {
-            CompoundTag entryTag = listTag.getCompound(i);
-
-            BlockPos pos = new BlockPos(
-                    entryTag.getInt("x"),
-                    entryTag.getInt("y"),
-                    entryTag.getInt("z")
-            );
-
-            int damage = entryTag.getInt("damage");
-            long time = entryTag.getLong("time");
-
-            damageMap.put(pos, new BlockDamageData(damage, time));
-        }
-    }
-
-    public int clearAllDamage(ServerLevel level) {
-        int count = damageMap.size();
-
-        for (BlockPos pos : damageMap.keySet()) {
-            level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
-        }
-
-        damageMap.clear();
-
-        return count;
     }
 }
