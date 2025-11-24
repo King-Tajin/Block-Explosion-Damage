@@ -58,7 +58,7 @@ public class ConfigFileHandler {
     private static ConfigData createDefaultConfig() {
         ConfigData config = new ConfigData();
         config.defaultHitsMultiplier = 6.0;
-        config.damageDecayTime = 180;
+        config.damageDecayTime = 460;
 
         config.customBlockHits.put("minecraft:glass", 2);
         config.customBlockHits.put("minecraft:obsidian", 12);
@@ -137,7 +137,7 @@ public class ConfigFileHandler {
 
     public static class ConfigData {
         public double defaultHitsMultiplier = 6.0;
-        public int damageDecayTime = 180;
+        public int damageDecayTime = 460;
         public Map<String, Integer> customBlockHits = new HashMap<>();
         public Set<String> protectiveBlocks = new HashSet<>();
     }
