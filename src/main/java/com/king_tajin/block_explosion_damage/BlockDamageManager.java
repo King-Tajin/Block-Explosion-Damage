@@ -36,7 +36,7 @@ public class BlockDamageManager {
         LevelChunk chunk = level.getChunkAt(pos);
         ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
         chunkData.setDamage(pos, damage, level.getGameTime());
-        chunk.setUnsaved(true);
+        chunk.markUnsaved();
         ChunkPos chunkPos = chunk.getPos();
         damagedChunks.add(chunkPos);
     }
@@ -45,7 +45,7 @@ public class BlockDamageManager {
         LevelChunk chunk = level.getChunkAt(pos);
         ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
         chunkData.removeDamage(pos);
-        chunk.setUnsaved(true);
+        chunk.markUnsaved();
         ChunkPos chunkPos = chunk.getPos();
 
         if (chunkData.isEmpty()) {
@@ -79,7 +79,7 @@ public class BlockDamageManager {
             boolean modified = chunkData.processDecay(level, currentTime, decayTime);
 
             if (modified) {
-                chunk.setUnsaved(true);
+                chunk.markUnsaved();
             }
 
             if (chunkData.isEmpty()) {
@@ -118,7 +118,7 @@ public class BlockDamageManager {
             ChunkDamageData chunkData = chunk.getData(CHUNK_DAMAGE);
 
             totalCleared += chunkData.clearAllDamage(level);
-            chunk.setUnsaved(true);
+            chunk.markUnsaved();
         }
 
         damagedChunks.clear();

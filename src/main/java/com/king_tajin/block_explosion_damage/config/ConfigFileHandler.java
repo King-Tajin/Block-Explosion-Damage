@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.fml.loading.FMLPaths;
-import net.minecraft.core.registries.BuiltInRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -132,7 +132,7 @@ public class ConfigFileHandler {
         if (resourceLocation == null) {
             return null;
         }
-        return BuiltInRegistries.BLOCK.get(resourceLocation);
+        return BuiltInRegistries.BLOCK.getValue(resourceLocation);
     }
 
     public static class ConfigData {
