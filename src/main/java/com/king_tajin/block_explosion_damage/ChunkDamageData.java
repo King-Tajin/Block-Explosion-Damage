@@ -1,7 +1,6 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
@@ -10,16 +9,19 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ChunkDamageData {
 
     public static final MapCodec<ChunkDamageData> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
-                    Codec.unboundedMap(
-                            BlockPos.CODEC,
-                            BlockDamageData.CODEC
-                    ).fieldOf("damageMap").forGetter(data -> data.damageMap)
+                    BlockDamageData.CODEC.listOf().fieldOf("damages").forGetter(data ->
+                            data.damageMap.entrySet().stream()
+                                    .map(entry -> new BlockDamageData(entry.getKey(), entry.getValue().damage(), entry.getValue().lastDamageTime()))
+                                    .collect(Collectors.toList())
+                    )
             ).apply(instance, ChunkDamageData::new)
     );
 
@@ -29,16 +31,20 @@ public class ChunkDamageData {
         this.damageMap = new HashMap<>();
     }
 
-    private ChunkDamageData(Map<BlockPos, BlockDamageData> damageMap) {
-        this.damageMap = new HashMap<>(damageMap);
+    private ChunkDamageData(List<BlockDamageData> damages) {
+        this.damageMap = new HashMap<>();
+        for (BlockDamageData damage : damages) {
+            this.damageMap.put(damage.pos(), damage);
+        }
     }
 
     public BlockDamageData getDamage(BlockPos pos) {
-        return damageMap.getOrDefault(pos, new BlockDamageData(0, 0));
+        BlockDamageData data = damageMap.get(pos);
+        return data != null ? data : new BlockDamageData(0, 0);
     }
 
     public void setDamage(BlockPos pos, int damage, long time) {
-        damageMap.put(pos.immutable(), new BlockDamageData(damage, time));
+        damageMap.put(pos.immutable(), new BlockDamageData(pos.immutable(), damage, time));
     }
 
     public void removeDamage(BlockPos pos) {
@@ -101,7 +107,7 @@ public class ChunkDamageData {
                     iterator.remove();
                     level.destroyBlockProgress(-1 - pos.hashCode(), pos, -1);
                 } else {
-                    entry.setValue(new BlockDamageData(newDamage, currentTime));
+                    entry.setValue(new BlockDamageData(pos, newDamage, currentTime));
 
                     int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
                     int damageStage = Math.min(9, (int) ((float) newDamage / maxDamage * 10));
