@@ -17,7 +17,7 @@ public class ChunkDamageData {
 
     public static final MapCodec<ChunkDamageData> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
-                    BlockDamageData.CODEC.listOf().fieldOf("damages").forGetter(data ->
+                    BlockDamageData.CODEC.listOf().optionalFieldOf("damages", List.of()).forGetter(data ->
                             data.damageMap.entrySet().stream()
                                     .map(entry -> new BlockDamageData(entry.getKey(), entry.getValue().damage(), entry.getValue().lastDamageTime()))
                                     .collect(Collectors.toList())
