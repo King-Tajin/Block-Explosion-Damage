@@ -1,0 +1,80 @@
+package com.king_tajin.block_explosion_damage;
+
+import com.king_tajin.block_explosion_damage.config.ModConfig;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.ExplosionEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+
+@Mod("block_explosion_damage")
+public class BlockExplosionDamage {
+
+    public BlockExplosionDamage(IEventBus modEventBus) {
+        modEventBus.addListener(this::commonSetup);
+        BlockDamageManager.ATTACHMENT_TYPES.register(modEventBus);
+        ModGameRules.register(modEventBus);
+        NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(new BlockDamageEventHandler());
+    }
+
+    private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(ModConfig::init);
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        ModCommands.register(event.getDispatcher());
+    }
+
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel && event.getChunk() instanceof LevelChunk chunk) {
+            ChunkDamageData chunkData = chunk.getData(BlockDamageManager.CHUNK_DAMAGE);
+            BlockDamageManager.registerLoadedChunk(serverLevel, chunk.getPos(), chunkData);
+        }
+    }
+
+    @SubscribeEvent
+    public void onChunkUnload(ChunkEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel && event.getChunk() instanceof LevelChunk chunk) {
+            BlockDamageManager.unregisterChunk(serverLevel, chunk.getPos());
+        }
+    }
+
+    @SubscribeEvent
+    public void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            BlockDamageManager.onLevelUnload(serverLevel);
+        }
+    }
+
+    @SubscribeEvent
+    public void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        Level level = event.getLevel();
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        ExplosionHandler.handleExplosion(serverLevel, event.getExplosion(), event.getAffectedBlocks());
+    }
+
+    @SubscribeEvent
+    public void onLevelTick(LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            if (serverLevel.getGameTime() % 20 == 0) {
+                BlockDamageManager.processDecay(serverLevel);
+            }
+            if (serverLevel.getGameTime() % 10 == 0) {
+                BlockDamageManager.refreshVisuals(serverLevel);
+            }
+        }
+    }
+}
