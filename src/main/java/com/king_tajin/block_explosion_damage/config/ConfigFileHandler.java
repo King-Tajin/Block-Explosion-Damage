@@ -30,6 +30,7 @@ public class ConfigFileHandler {
     private static final File CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "block_explosion_damage.toml");
     private static final File LEGACY_JSON_CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "block_explosion_damage.json");
     private static final int PROTECTIVE_BLOCKS_PER_LINE = 4;
+    private static final String PROTECTIVE_BLOCKS_KEY = "protectiveBlocks";
 
     public static ConfigData loadConfig() {
         if (CONFIG_FILE.exists()) {
@@ -40,11 +41,17 @@ public class ConfigFileHandler {
             return migrateLegacyJsonConfig();
         }
 
-        return createDefaultConfig();
+        ConfigData config = buildDefaultConfig();
+        saveConfig(config);
+        return config;
     }
 
     private static ConfigData migrateLegacyJsonConfig() {
         ConfigData config = loadLegacyJsonConfig();
+        if (config == null) {
+            return buildDefaultConfig();
+        }
+
         saveConfig(config);
 
         File migratedFile = new File(LEGACY_JSON_CONFIG_FILE.getParentFile(), "block_explosion_damage.json.migrated");
@@ -79,8 +86,8 @@ public class ConfigFileHandler {
 
             return config;
         } catch (Exception e) {
-            LOGGER.warn("block_explosion_damage: Failed to read legacy JSON config, using defaults: {}", e.getMessage());
-            return createDefaultConfig();
+            LOGGER.warn("block_explosion_damage: Failed to read legacy JSON config, using defaults without overwriting any files: {}", e.getMessage());
+            return null;
         }
     }
 
@@ -89,33 +96,59 @@ public class ConfigFileHandler {
             fileConfig.load();
 
             ConfigData config = new ConfigData();
-            config.defaultHitsMultiplier = getDoubleOrElse(fileConfig);
-            config.damageDecayTime = fileConfig.getIntOrElse("damageDecayTime", 550);
-            config.sableCompatibilityEnabled = fileConfig.getOrElse("sableCompatibilityEnabled", false);
+            config.defaultHitsMultiplier = getNumberOrElse(fileConfig, "defaultHitsMultiplier", 6.0).doubleValue();
+            config.damageDecayTime = getNumberOrElse(fileConfig, "damageDecayTime", 550).intValue();
+            Object sableValue = fileConfig.get("sableCompatibilityEnabled");
+            config.sableCompatibilityEnabled = sableValue instanceof Boolean enabled && enabled;
 
-            Config customHits = fileConfig.get("customBlockHits");
-            if (customHits != null) {
+            boolean layoutNeedsRewrite = false;
+
+            Object customHitsValue = fileConfig.get("customBlockHits");
+            if (customHitsValue instanceof Config customHits) {
                 for (Config.Entry entry : customHits.entrySet()) {
-                    config.customBlockHits.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                    Object value = entry.getValue();
+                    if (value instanceof Number number) {
+                        config.customBlockHits.put(entry.getKey(), number.intValue());
+                    } else if (PROTECTIVE_BLOCKS_KEY.equals(entry.getKey()) && value instanceof List<?> list) {
+                        addStrings(config.protectiveBlocks, list);
+                        layoutNeedsRewrite = true;
+                    } else {
+                        LOGGER.warn("block_explosion_damage: Ignoring invalid customBlockHits entry '{}'", entry.getKey());
+                    }
                 }
             }
 
-            List<String> protectiveBlocks = fileConfig.getOrElse("protectiveBlocks", new ArrayList<>());
-            config.protectiveBlocks.addAll(protectiveBlocks);
+            Object protectiveBlocksValue = fileConfig.get(PROTECTIVE_BLOCKS_KEY);
+            if (protectiveBlocksValue instanceof List<?> list) {
+                addStrings(config.protectiveBlocks, list);
+            }
+
+            if (layoutNeedsRewrite) {
+                saveConfig(config);
+                LOGGER.info("block_explosion_damage: Fixed config layout, protectiveBlocks moved out of [customBlockHits]");
+            }
 
             return config;
         } catch (Exception e) {
-            LOGGER.warn("block_explosion_damage: Failed to load config, using defaults: {}", e.getMessage());
-            return createDefaultConfig();
+            LOGGER.warn("block_explosion_damage: Failed to load config, using defaults without overwriting the file: {}", e.getMessage());
+            return buildDefaultConfig();
         }
     }
 
-    private static double getDoubleOrElse(Config config) {
-        Number value = config.get("defaultHitsMultiplier");
-        return value != null ? value.doubleValue() : 6.0;
+    private static Number getNumberOrElse(Config config, String key, Number fallback) {
+        Object value = config.get(key);
+        return value instanceof Number number ? number : fallback;
     }
 
-    private static ConfigData createDefaultConfig() {
+    private static void addStrings(Set<String> target, List<?> values) {
+        for (Object value : values) {
+            if (value instanceof String string) {
+                target.add(string);
+            }
+        }
+    }
+
+    private static ConfigData buildDefaultConfig() {
         ConfigData config = new ConfigData();
         config.defaultHitsMultiplier = 6.0;
         config.damageDecayTime = 550;
@@ -133,7 +166,6 @@ public class ConfigFileHandler {
         config.protectiveBlocks.add("minecraft:structure_block");
         config.protectiveBlocks.add("minecraft:jigsaw");
 
-        saveConfig(config);
         return config;
     }
 
@@ -171,6 +203,14 @@ public class ConfigFileHandler {
         toml.append("sableCompatibilityEnabled = ").append(config.sableCompatibilityEnabled).append("\n");
         toml.append("\n");
 
+        toml.append("# Blocks that shield other blocks from explosion damage\n");
+        toml.append("# Blocks behind these won't take damage from explosions\n");
+        toml.append("# Format: [\"minecraft:block_name\", ...]\n");
+        toml.append("protectiveBlocks = [\n");
+        appendWrappedStringArray(toml, new TreeSet<>(config.protectiveBlocks));
+        toml.append("]\n");
+        toml.append("\n");
+
         toml.append("# Override specific blocks to require exact number of hits\n");
         toml.append("# Format: \"minecraft:block_name\" = number_of_hits\n");
         toml.append("# These override the defaultHitsMultiplier calculation\n");
@@ -178,14 +218,6 @@ public class ConfigFileHandler {
         for (Map.Entry<String, Integer> entry : new TreeMap<>(config.customBlockHits).entrySet()) {
             toml.append(quoteTomlString(entry.getKey())).append(" = ").append(entry.getValue()).append("\n");
         }
-        toml.append("\n");
-
-        toml.append("# Blocks that shield other blocks from explosion damage\n");
-        toml.append("# Blocks behind these won't take damage from explosions\n");
-        toml.append("# Format: [\"minecraft:block_name\", ...]\n");
-        toml.append("protectiveBlocks = [\n");
-        appendWrappedStringArray(toml, new TreeSet<>(config.protectiveBlocks));
-        toml.append("]\n");
 
         return toml.toString();
     }
