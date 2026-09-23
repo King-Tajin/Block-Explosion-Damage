@@ -4,12 +4,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 public class BlockDamageEventHandler {
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public void onBlockBreak(BreakBlockEvent event) {
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
         if (event.isCanceled()) return;
         if (event.getLevel() instanceof ServerLevel serverLevel) {
             BlockPos pos = event.getPos();

@@ -20,14 +20,16 @@ public class BlockExplosionDamage {
 
     public BlockExplosionDamage(IEventBus modEventBus) {
         modEventBus.addListener(this::commonSetup);
+
         BlockDamageManager.ATTACHMENT_TYPES.register(modEventBus);
-        ModGameRules.register(modEventBus);
+
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(new BlockDamageEventHandler());
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(ModConfig::init);
+        ModGameRules.register();
     }
 
     @SubscribeEvent
@@ -60,6 +62,7 @@ public class BlockExplosionDamage {
     @SubscribeEvent
     public void onExplosionDetonate(ExplosionEvent.Detonate event) {
         Level level = event.getLevel();
+
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -72,9 +75,11 @@ public class BlockExplosionDamage {
             if (serverLevel.getGameTime() % 20 == 0) {
                 BlockDamageManager.processDecay(serverLevel);
             }
+
             if (serverLevel.getGameTime() % 10 == 0) {
                 BlockDamageManager.refreshVisuals(serverLevel);
             }
         }
     }
+
 }

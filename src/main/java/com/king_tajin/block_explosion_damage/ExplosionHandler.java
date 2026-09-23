@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashSet;
@@ -14,7 +14,7 @@ import java.util.Set;
 
 public class ExplosionHandler {
 
-    public static void handleExplosion(ServerLevel level, ServerExplosion explosion, List<BlockPos> affectedBlocks) {
+    public static void handleExplosion(ServerLevel level, Explosion explosion, List<BlockPos> affectedBlocks) {
         Vec3 explosionCenter = explosion.center();
         float radius = explosion.radius();
 
@@ -123,6 +123,7 @@ public class ExplosionHandler {
     }
 
     private static void updateAffectedBlocksList(List<BlockPos> affectedBlocks, Set<BlockPos> blocksToBreak) {
+
         affectedBlocks.removeIf(pos -> !blocksToBreak.contains(pos));
         for (BlockPos pos : blocksToBreak) {
             if (!affectedBlocks.contains(pos)) {

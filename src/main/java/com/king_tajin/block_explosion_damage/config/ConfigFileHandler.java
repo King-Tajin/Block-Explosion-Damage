@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.fml.loading.FMLPaths;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +81,7 @@ public class ConfigFileHandler {
 
     public static void saveConfig(ConfigData config) {
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+
             writer.write("// Block Explosion Damage Configuration\n");
             writer.write("// \n");
             writer.write("// If server is running while config is changed, use /block_explosion_damage reload\n");
@@ -90,7 +91,7 @@ public class ConfigFileHandler {
             writer.write("// \n");
             writer.write("// damageDecayTime: Time in ticks before damage heals by 1 hit (20 ticks = 1 second)\n");
             writer.write("//   - 6000 ticks = 5 minutes\n");
-            writer.write("//   - Note: Can be disabled with /gamerule tnt_block_damage_decay false\n");
+            writer.write("//   - Note: Can be disabled with /gamerule tntBlockDamageDecay false\n");
             writer.write("// \n");
             writer.write("// customBlockHits: Override specific blocks to require exact number of hits\n");
             writer.write("//   - Format: \"minecraft:block_name\": number_of_hits\n");
@@ -103,6 +104,7 @@ public class ConfigFileHandler {
             writer.write("\n");
 
             JsonObject json = getJsonObject(config);
+
             GSON.toJson(json, writer);
         } catch (IOException e) {
             LOGGER.warn("block_explosion_damage: Failed to save config: {}", e.getMessage());
@@ -129,12 +131,12 @@ public class ConfigFileHandler {
     }
 
     public static Block getBlockFromString(String blockId) {
-        Identifier identifier = Identifier.tryParse(blockId);
-        if (identifier == null) {
+        ResourceLocation resourceLocation = ResourceLocation.tryParse(blockId);
+        if (resourceLocation == null) {
             LOGGER.warn("block_explosion_damage: Invalid block ID in config: '{}'", blockId);
             return null;
         }
-        return BuiltInRegistries.BLOCK.getValue(identifier);
+        return BuiltInRegistries.BLOCK.get(resourceLocation);
     }
 
     public static class ConfigData {

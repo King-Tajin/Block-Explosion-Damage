@@ -13,7 +13,7 @@ public class ModCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("block_explosion_damage")
-                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                        .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("reload")
                                 .executes(ModCommands::reloadConfig)
                         )
