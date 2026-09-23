@@ -11,6 +11,7 @@ public class ModConfig {
 
     private static double defaultHitsMultiplier = 6.0;
     private static int damageDecayTime = 2400;
+    private static boolean sableCompatibilityEnabled = false;
     private static final Map<Block, Integer> customBlockHits = new HashMap<>();
     private static final Set<Block> protectiveBlocks = new HashSet<>();
 
@@ -19,6 +20,7 @@ public class ModConfig {
 
         defaultHitsMultiplier = config.defaultHitsMultiplier;
         damageDecayTime = config.damageDecayTime;
+        sableCompatibilityEnabled = config.sableCompatibilityEnabled;
 
         customBlockHits.clear();
         for (Map.Entry<String, Integer> entry : config.customBlockHits.entrySet()) {
@@ -57,5 +59,9 @@ public class ModConfig {
 
     public static int getDamageDecayTime() {
         return damageDecayTime;
+    }
+
+    public static boolean isSableCompatibilityEnabled() {
+        return sableCompatibilityEnabled;
     }
 }
