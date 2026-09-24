@@ -2,26 +2,27 @@ package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
 import com.mojang.serialization.Codec;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 public class ChunkDamageData {
 
     private static final Codec<BlockPos> BLOCKPOS_KEY_CODEC = Codec.STRING.xmap(
-            s -> {
-                String[] parts = s.split(",");
-                return new BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-            },
-            pos -> pos.getX() + "," + pos.getY() + "," + pos.getZ()
+        s -> {
+            String[] parts = s.split(",");
+            return new BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+        },
+        pos -> pos.getX() + "," + pos.getY() + "," + pos.getZ()
     );
 
-    public static final Codec<ChunkDamageData> CODEC = Codec.unboundedMap(BLOCKPOS_KEY_CODEC, BlockDamageData.CODEC)
-            .xmap(ChunkDamageData::fromMap, data -> data.damageMap);
+    public static final Codec<ChunkDamageData> CODEC = Codec.unboundedMap(
+        BLOCKPOS_KEY_CODEC,
+        BlockDamageData.CODEC
+    ).xmap(ChunkDamageData::fromMap, data -> data.damageMap);
 
     private final Map<BlockPos, BlockDamageData> damageMap;
 
@@ -60,7 +61,7 @@ public class ChunkDamageData {
             if (state.isAir()) continue;
 
             int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
-            int damageStage = Math.min(9, (int) ((float) data.damage() / maxDamage * 10));
+            int damageStage = Math.min(9, (int) (((float) data.damage() / maxDamage) * 10));
             level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
         }
     }
@@ -100,7 +101,7 @@ public class ChunkDamageData {
                 } else {
                     entry.setValue(new BlockDamageData(newDamage, currentTime));
                     int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
-                    int damageStage = Math.min(9, (int) ((float) newDamage / maxDamage * 10));
+                    int damageStage = Math.min(9, (int) (((float) newDamage / maxDamage) * 10));
                     level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
                 }
                 modified = true;

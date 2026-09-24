@@ -13,20 +13,26 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModGameRules {
-    public static final DeferredRegister<GameRule<?>> GAME_RULES =
-            DeferredRegister.create(BuiltInRegistries.GAME_RULE, "block_explosion_damage");
 
-    public static final DeferredHolder<GameRule<?>, GameRule<Boolean>> RULE_BLOCK_DAMAGE_DECAY =
-            GAME_RULES.register("tnt_block_damage_decay", () -> new GameRule<>(
-                    GameRuleCategory.UPDATES,
-                    GameRuleType.BOOL,
-                    BoolArgumentType.bool(),
-                    GameRuleTypeVisitor::visitBoolean,
-                    Codec.BOOL,
-                    value -> value ? 1 : 0,
-                    true,
-                    FeatureFlagSet.of()
-            ));
+    public static final DeferredRegister<GameRule<?>> GAME_RULES = DeferredRegister.create(
+        BuiltInRegistries.GAME_RULE,
+        "block_explosion_damage"
+    );
+
+    public static final DeferredHolder<GameRule<?>, GameRule<Boolean>> RULE_BLOCK_DAMAGE_DECAY = GAME_RULES.register(
+        "tnt_block_damage_decay",
+        () ->
+            new GameRule<>(
+                GameRuleCategory.UPDATES,
+                GameRuleType.BOOL,
+                BoolArgumentType.bool(),
+                GameRuleTypeVisitor::visitBoolean,
+                Codec.BOOL,
+                value -> value ? 1 : 0,
+                true,
+                FeatureFlagSet.of()
+            )
+    );
 
     public static void register(IEventBus modEventBus) {
         GAME_RULES.register(modEventBus);

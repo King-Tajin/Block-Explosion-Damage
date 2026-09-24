@@ -1,6 +1,11 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -8,12 +13,6 @@ import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class ExplosionHandler {
 
@@ -23,10 +22,10 @@ public class ExplosionHandler {
     private static final double MAX_ANGLE_STEP = Math.PI / 6;
 
     public static void handleExplosion(
-            ServerLevel level,
-            ServerExplosion explosion,
-            List<BlockPos> affectedBlocks,
-            List<Entity> affectedEntities
+        ServerLevel level,
+        ServerExplosion explosion,
+        List<BlockPos> affectedBlocks,
+        List<Entity> affectedEntities
     ) {
         Vec3 explosionCenter = explosion.center();
         float radius = explosion.radius();
@@ -45,9 +44,10 @@ public class ExplosionHandler {
 
     private static void removeFullyShieldedEntities(Vec3 explosionCenter, float radius, List<Entity> affectedEntities) {
         double diameter = radius * 2.0;
-        affectedEntities.removeIf(entity ->
-                Math.sqrt(entity.distanceToSqr(explosionCenter)) / diameter <= 1.0
-                        && ServerExplosion.getSeenPercent(explosionCenter, entity) == 0.0F
+        affectedEntities.removeIf(
+            entity ->
+                Math.sqrt(entity.distanceToSqr(explosionCenter)) / diameter <= 1.0 &&
+                ServerExplosion.getSeenPercent(explosionCenter, entity) == 0.0F
         );
     }
 
@@ -79,12 +79,12 @@ public class ExplosionHandler {
     }
 
     private static void castExplosionRay(
-            ServerLevel level,
-            Vec3 origin,
-            Vec3 direction,
-            float radius,
-            Set<BlockPos> blocksToBreak,
-            Map<BlockPos, Integer> damageMap
+        ServerLevel level,
+        Vec3 origin,
+        Vec3 direction,
+        float radius,
+        Set<BlockPos> blocksToBreak,
+        Map<BlockPos, Integer> damageMap
     ) {
         for (double d = RAY_STEP; d <= radius; d += RAY_STEP) {
             Vec3 point = origin.add(direction.scale(d));
@@ -120,7 +120,7 @@ public class ExplosionHandler {
     private static int calculateDamageAmount(double distance, float radius) {
         double normalizedDistance = distance / radius;
         double radiusMultiplier = Math.max(1.0, radius / 4.0);
-        double distanceMultiplier = 3.0 - (2.0 * normalizedDistance);
+        double distanceMultiplier = 3.0 - 2.0 * normalizedDistance;
         return Math.max(1, (int) Math.round(distanceMultiplier * radiusMultiplier));
     }
 
@@ -155,7 +155,7 @@ public class ExplosionHandler {
     }
 
     private static void showDamageEffects(ServerLevel level, BlockPos pos, int damage, int maxDamage) {
-        int damageStage = Math.min(9, (int) ((float) damage / maxDamage * 10));
+        int damageStage = Math.min(9, (int) (((float) damage / maxDamage) * 10));
         level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
     }
 }

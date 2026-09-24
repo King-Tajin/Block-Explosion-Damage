@@ -1,6 +1,12 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -19,32 +25,38 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-
 public class BlockDamageManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("block_explosion_damage");
 
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, "block_explosion_damage");
+    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(
+        NeoForgeRegistries.ATTACHMENT_TYPES,
+        "block_explosion_damage"
+    );
 
     public static final Supplier<AttachmentType<ChunkDamageData>> CHUNK_DAMAGE = ATTACHMENT_TYPES.register(
-            "chunk_damage",
-            () -> AttachmentType.builder(ChunkDamageData::new)
-                    .serialize(new IAttachmentSerializer<>() {
+        "chunk_damage",
+        () ->
+            AttachmentType.builder(ChunkDamageData::new)
+                .serialize(
+                    new IAttachmentSerializer<>() {
                         @Override
-                        public @NonNull ChunkDamageData read(@NotNull IAttachmentHolder holder, @NotNull ValueInput input) {
+                        public @NonNull ChunkDamageData read(
+                            @NotNull IAttachmentHolder holder,
+                            @NotNull ValueInput input
+                        ) {
                             return input.read("data", ChunkDamageData.CODEC).orElseGet(() -> {
                                 if (!input.childrenListOrEmpty("damages").isEmpty()) {
                                     if (holder instanceof LevelChunk chunk) {
-                                        LOGGER.warn("block_explosion_damage: Found incompatible chunk damage data at chunk [{}, {}] (likely from a previous version), clearing it.", chunk.getPos().x(), chunk.getPos().z());
+                                        LOGGER.warn(
+                                            "block_explosion_damage: Found incompatible chunk damage data at chunk [{}, {}] (likely from a previous version), clearing it.",
+                                            chunk.getPos().x(),
+                                            chunk.getPos().z()
+                                        );
                                     } else {
-                                        LOGGER.warn("block_explosion_damage: Found incompatible chunk damage data (likely from a previous version), clearing it.");
+                                        LOGGER.warn(
+                                            "block_explosion_damage: Found incompatible chunk damage data (likely from a previous version), clearing it."
+                                        );
                                     }
                                 }
                                 return new ChunkDamageData();
@@ -57,8 +69,9 @@ public class BlockDamageManager {
                             output.store("data", ChunkDamageData.CODEC, attachment);
                             return true;
                         }
-                    })
-                    .build()
+                    }
+                )
+                .build()
     );
 
     private static final Map<ResourceKey<Level>, Set<ChunkPos>> damagedChunks = new HashMap<>();

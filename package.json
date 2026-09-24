@@ -1,0 +1,13 @@
+{
+  "name": "block-explosion-damage-formatting",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "prettier-plugin-java": "^2.10.3"
+  }
+}

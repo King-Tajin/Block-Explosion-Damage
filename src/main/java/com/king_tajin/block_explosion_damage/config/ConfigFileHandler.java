@@ -4,13 +4,6 @@ import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.block.Block;
-import net.neoforged.fml.loading.FMLPaths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -23,12 +16,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.fml.loading.FMLPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConfigFileHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("block_explosion_damage");
     private static final File CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "block_explosion_damage.toml");
-    private static final File LEGACY_JSON_CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "block_explosion_damage.json");
+    private static final File LEGACY_JSON_CONFIG_FILE = new File(
+        FMLPaths.CONFIGDIR.get().toFile(),
+        "block_explosion_damage.json"
+    );
     private static final int PROTECTIVE_BLOCKS_PER_LINE = 4;
     private static final String PROTECTIVE_BLOCKS_KEY = "protectiveBlocks";
 
@@ -85,7 +87,10 @@ public class ConfigFileHandler {
 
             return config;
         } catch (Exception e) {
-            LOGGER.warn("block_explosion_damage: Failed to read legacy JSON config, using defaults without overwriting any files: {}", e.getMessage());
+            LOGGER.warn(
+                "block_explosion_damage: Failed to read legacy JSON config, using defaults without overwriting any files: {}",
+                e.getMessage()
+            );
             return null;
         }
     }
@@ -110,7 +115,10 @@ public class ConfigFileHandler {
                         addStrings(config.protectiveBlocks, list);
                         layoutNeedsRewrite = true;
                     } else {
-                        LOGGER.warn("block_explosion_damage: Ignoring invalid customBlockHits entry '{}'", entry.getKey());
+                        LOGGER.warn(
+                            "block_explosion_damage: Ignoring invalid customBlockHits entry '{}'",
+                            entry.getKey()
+                        );
                     }
                 }
             }
@@ -122,12 +130,17 @@ public class ConfigFileHandler {
 
             if (layoutNeedsRewrite) {
                 saveConfig(config);
-                LOGGER.info("block_explosion_damage: Fixed config layout, protectiveBlocks moved out of [customBlockHits]");
+                LOGGER.info(
+                    "block_explosion_damage: Fixed config layout, protectiveBlocks moved out of [customBlockHits]"
+                );
             }
 
             return config;
         } catch (Exception e) {
-            LOGGER.warn("block_explosion_damage: Failed to load config, using defaults without overwriting the file: {}", e.getMessage());
+            LOGGER.warn(
+                "block_explosion_damage: Failed to load config, using defaults without overwriting the file: {}",
+                e.getMessage()
+            );
             return buildDefaultConfig();
         }
     }
@@ -220,8 +233,8 @@ public class ConfigFileHandler {
         for (int i = 0; i < quotedValues.size(); i += PROTECTIVE_BLOCKS_PER_LINE) {
             int end = Math.min(i + PROTECTIVE_BLOCKS_PER_LINE, quotedValues.size());
             toml.append("    ")
-                    .append(String.join(", ", quotedValues.subList(i, end)))
-                    .append(",\n");
+                .append(String.join(", ", quotedValues.subList(i, end)))
+                .append(",\n");
         }
     }
 
@@ -240,6 +253,7 @@ public class ConfigFileHandler {
     }
 
     public static class ConfigData {
+
         public double defaultHitsMultiplier = 6.0;
         public int damageDecayTime = 550;
         public Map<String, Integer> customBlockHits = new HashMap<>();
