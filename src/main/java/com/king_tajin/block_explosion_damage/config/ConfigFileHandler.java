@@ -195,7 +195,7 @@ public class ConfigFileHandler {
         StringBuilder toml = new StringBuilder();
 
         toml.append("# Block Explosion Damage Configuration\n");
-        toml.append("#\n");
+        toml.append("# This mod is only needed server-side!\n");
         toml.append("# If server is running while config is changed, use /block_explosion_damage reload\n");
         toml.append("\n");
 
