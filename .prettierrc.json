@@ -1,0 +1,22 @@
+{
+  "plugins": ["prettier-plugin-java"],
+  "tabWidth": 4,
+  "printWidth": 120,
+  "useTabs": false,
+  "trailingComma": "none",
+  "overrides": [
+    {
+      "files": "*.java",
+      "options": {
+        "tabWidth": 4,
+        "printWidth": 120
+      }
+    },
+    {
+      "files": ["*.md", "*.json"],
+      "options": {
+        "tabWidth": 2
+      }
+    }
+  ]
+}

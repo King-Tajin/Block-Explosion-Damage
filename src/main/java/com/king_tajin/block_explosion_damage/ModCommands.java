@@ -12,14 +12,10 @@ public class ModCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("block_explosion_damage")
-                        .requires(source -> source.hasPermission(2))
-                        .then(Commands.literal("reload")
-                                .executes(ModCommands::reloadConfig)
-                        )
-                        .then(Commands.literal("cleardamage")
-                                .executes(ModCommands::clearAllDamage)
-                        )
+            Commands.literal("block_explosion_damage")
+                .requires(source -> source.hasPermission(2))
+                .then(Commands.literal("reload").executes(ModCommands::reloadConfig))
+                .then(Commands.literal("cleardamage").executes(ModCommands::clearAllDamage))
         );
     }
 
@@ -28,15 +24,10 @@ public class ModCommands {
 
         try {
             ModConfig.init();
-            source.sendSuccess(
-                    () -> Component.literal("§aBlock Explosion Damage config reloaded successfully!"),
-                    true
-            );
+            source.sendSuccess(() -> Component.literal("§aBlock Explosion Damage config reloaded successfully!"), true);
             return 1;
         } catch (Exception e) {
-            source.sendFailure(
-                    Component.literal("§cFailed to reload config: " + e.getMessage())
-            );
+            source.sendFailure(Component.literal("§cFailed to reload config: " + e.getMessage()));
             return 0;
         }
     }
@@ -50,10 +41,7 @@ public class ModCommands {
         }
 
         final int total = clearedCount;
-        source.sendSuccess(
-                () -> Component.literal("Cleared damage from " + total + " blocks"),
-                true
-        );
+        source.sendSuccess(() -> Component.literal("Cleared damage from " + total + " blocks"), true);
 
         return total;
     }

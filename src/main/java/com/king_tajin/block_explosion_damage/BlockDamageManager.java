@@ -1,6 +1,12 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -11,21 +17,16 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-
 public class BlockDamageManager {
 
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, "block_explosion_damage");
+    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(
+        NeoForgeRegistries.ATTACHMENT_TYPES,
+        "block_explosion_damage"
+    );
 
     public static final Supplier<AttachmentType<ChunkDamageData>> CHUNK_DAMAGE = ATTACHMENT_TYPES.register(
-            "chunk_damage",
-            () -> AttachmentType.serializable(ChunkDamageData::new).build()
+        "chunk_damage",
+        () -> AttachmentType.serializable(ChunkDamageData::new).build()
     );
 
     private static final Map<ResourceKey<Level>, Set<ChunkPos>> damagedChunks = new HashMap<>();
@@ -76,7 +77,6 @@ public class BlockDamageManager {
     }
 
     public static void processDecay(ServerLevel level) {
-
         if (!level.getGameRules().getBoolean(ModGameRules.RULE_BLOCK_DAMAGE_DECAY)) {
             return;
         }

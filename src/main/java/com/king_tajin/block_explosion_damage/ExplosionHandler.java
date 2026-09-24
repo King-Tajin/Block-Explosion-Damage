@@ -4,19 +4,18 @@ import com.king_tajin.block_explosion_damage.config.ModConfig;
 import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class ExplosionHandler {
 
@@ -49,8 +48,12 @@ public class ExplosionHandler {
         List<SubLevelAccess> nearbySubLevels = new ArrayList<>();
 
         BoundingBox3d searchBounds = new BoundingBox3d(
-                explosionCenter.x - radius, explosionCenter.y - radius, explosionCenter.z - radius,
-                explosionCenter.x + radius, explosionCenter.y + radius, explosionCenter.z + radius
+            explosionCenter.x - radius,
+            explosionCenter.y - radius,
+            explosionCenter.z - radius,
+            explosionCenter.x + radius,
+            explosionCenter.y + radius,
+            explosionCenter.z + radius
         );
 
         for (SubLevelAccess subLevel : SableCompanion.INSTANCE.getAllIntersecting(level, searchBounds)) {
@@ -73,7 +76,12 @@ public class ExplosionHandler {
         return BlockPos.containing(globalPos);
     }
 
-    private static Set<BlockPos> processExplosionRadius(ServerLevel level, Vec3 explosionCenter, float radius, List<SubLevelAccess> nearbySubLevels) {
+    private static Set<BlockPos> processExplosionRadius(
+        ServerLevel level,
+        Vec3 explosionCenter,
+        float radius,
+        List<SubLevelAccess> nearbySubLevels
+    ) {
         Set<BlockPos> blocksToBreak = new HashSet<>();
         Map<BlockPos, Integer> damageMap = new HashMap<>();
 
@@ -85,15 +93,11 @@ public class ExplosionHandler {
             double sinTheta = Math.sin(theta);
             double cosTheta = Math.cos(theta);
 
-            int azimuthSteps = Math.max(1, (int) Math.ceil(2 * Math.PI * sinTheta / angleStep));
+            int azimuthSteps = Math.max(1, (int) Math.ceil((2 * Math.PI * sinTheta) / angleStep));
 
             for (int j = 0; j < azimuthSteps; j++) {
-                double phi = j * 2 * Math.PI / azimuthSteps;
-                Vec3 direction = new Vec3(
-                        sinTheta * Math.cos(phi),
-                        cosTheta,
-                        sinTheta * Math.sin(phi)
-                ).normalize();
+                double phi = (j * 2 * Math.PI) / azimuthSteps;
+                Vec3 direction = new Vec3(sinTheta * Math.cos(phi), cosTheta, sinTheta * Math.sin(phi)).normalize();
 
                 castExplosionRay(level, explosionCenter, direction, radius, nearbySubLevels, blocksToBreak, damageMap);
             }
@@ -104,7 +108,15 @@ public class ExplosionHandler {
         return blocksToBreak;
     }
 
-    private static void castExplosionRay(ServerLevel level, Vec3 origin, Vec3 direction, float radius, List<SubLevelAccess> nearbySubLevels, Set<BlockPos> blocksToBreak, Map<BlockPos, Integer> damageMap) {
+    private static void castExplosionRay(
+        ServerLevel level,
+        Vec3 origin,
+        Vec3 direction,
+        float radius,
+        List<SubLevelAccess> nearbySubLevels,
+        Set<BlockPos> blocksToBreak,
+        Map<BlockPos, Integer> damageMap
+    ) {
         for (double d = RAY_STEP; d <= radius; d += RAY_STEP) {
             Vec3 point = origin.add(direction.scale(d));
             BlockPos pos = resolveBlockPos(level, point, nearbySubLevels);
@@ -139,7 +151,7 @@ public class ExplosionHandler {
     private static int calculateDamageAmount(double distance, float radius) {
         double normalizedDistance = distance / radius;
         double radiusMultiplier = Math.max(1.0, radius / 4.0);
-        double distanceMultiplier = 3.0 - (2.0 * normalizedDistance);
+        double distanceMultiplier = 3.0 - 2.0 * normalizedDistance;
         return Math.max(1, (int) Math.round(distanceMultiplier * radiusMultiplier));
     }
 
@@ -165,7 +177,6 @@ public class ExplosionHandler {
     }
 
     private static void updateAffectedBlocksList(List<BlockPos> affectedBlocks, Set<BlockPos> blocksToBreak) {
-
         affectedBlocks.removeIf(pos -> !blocksToBreak.contains(pos));
         for (BlockPos pos : blocksToBreak) {
             if (!affectedBlocks.contains(pos)) {
@@ -175,7 +186,7 @@ public class ExplosionHandler {
     }
 
     private static void showDamageEffects(ServerLevel level, BlockPos pos, int damage, int maxDamage) {
-        int damageStage = Math.min(9, (int) ((float) damage / maxDamage * 10));
+        int damageStage = Math.min(9, (int) (((float) damage / maxDamage) * 10));
         level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
     }
 }

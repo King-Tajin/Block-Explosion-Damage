@@ -8,9 +8,9 @@ public class ModGameRules {
 
     public static void register() {
         RULE_BLOCK_DAMAGE_DECAY = GameRules.register(
-                "tntBlockDamageDecay",
-                GameRules.Category.UPDATES,
-                GameRules.BooleanValue.create(true)
+            "tntBlockDamageDecay",
+            GameRules.Category.UPDATES,
+            GameRules.BooleanValue.create(true)
         );
     }
 }

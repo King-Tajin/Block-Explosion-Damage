@@ -1,6 +1,9 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -10,11 +13,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTSerializable<CompoundTag> {
+
     private final Map<BlockPos, BlockDamageData> damageMap = new HashMap<>();
 
     public ChunkDamageData() {}
@@ -46,7 +46,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
             }
 
             int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
-            int damageStage = Math.min(9, (int) ((float) data.damage() / maxDamage * 10));
+            int damageStage = Math.min(9, (int) (((float) data.damage() / maxDamage) * 10));
             level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
         }
     }
@@ -78,7 +78,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
                     entry.setValue(new BlockDamageData(newDamage, currentTime));
 
                     int maxDamage = ModConfig.getHitsForBlock(state.getBlock());
-                    int damageStage = Math.min(9, (int) ((float) newDamage / maxDamage * 10));
+                    int damageStage = Math.min(9, (int) (((float) newDamage / maxDamage) * 10));
                     level.destroyBlockProgress(-1 - pos.hashCode(), pos, damageStage);
                 }
                 modified = true;
@@ -119,11 +119,7 @@ public class ChunkDamageData implements net.neoforged.neoforge.common.util.INBTS
         for (int i = 0; i < listTag.size(); i++) {
             CompoundTag entryTag = listTag.getCompound(i);
 
-            BlockPos pos = new BlockPos(
-                    entryTag.getInt("x"),
-                    entryTag.getInt("y"),
-                    entryTag.getInt("z")
-            );
+            BlockPos pos = new BlockPos(entryTag.getInt("x"), entryTag.getInt("y"), entryTag.getInt("z"));
 
             int damage = entryTag.getInt("damage");
             long time = entryTag.getLong("time");

@@ -1,6 +1,8 @@
 package com.king_tajin.block_explosion_damage;
 
 import com.king_tajin.block_explosion_damage.config.ModConfig;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -12,8 +14,6 @@ import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
-import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
 
 @Mod("block_explosion_damage")
 public class BlockExplosionDamage {
@@ -81,5 +81,4 @@ public class BlockExplosionDamage {
             }
         }
     }
-
 }

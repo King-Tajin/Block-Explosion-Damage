@@ -1,11 +1,10 @@
 package com.king_tajin.block_explosion_damage.config;
 
-import net.minecraft.world.level.block.Block;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.world.level.block.Block;
 
 public class ModConfig {
 
