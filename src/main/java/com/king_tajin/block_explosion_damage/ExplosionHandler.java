@@ -3,20 +3,35 @@ package com.king_tajin.block_explosion_damage;
 import com.king_tajin.block_explosion_damage.config.ModConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ExplosionHandler {
 
-    public static void handleExplosion(ServerLevel level, ServerExplosion explosion, List<BlockPos> affectedBlocks) {
+    private static final double RAY_STEP = 0.5;
+    private static final double TARGET_RAY_SPACING = 0.5;
+    private static final double MIN_ANGLE_STEP = 0.02;
+    private static final double MAX_ANGLE_STEP = Math.PI / 6;
+
+    public static void handleExplosion(
+            ServerLevel level,
+            ServerExplosion explosion,
+            List<BlockPos> affectedBlocks,
+            List<Entity> affectedEntities
+    ) {
         Vec3 explosionCenter = explosion.center();
         float radius = explosion.radius();
+
+        removeFullyShieldedEntities(explosionCenter, radius, affectedEntities);
 
         BlockPos explosionPos = BlockPos.containing(explosionCenter.x, explosionCenter.y, explosionCenter.z);
         if (!level.getFluidState(explosionPos).isEmpty()) {
@@ -28,75 +43,78 @@ public class ExplosionHandler {
         updateAffectedBlocksList(affectedBlocks, blocksToBreak);
     }
 
+    private static void removeFullyShieldedEntities(Vec3 explosionCenter, float radius, List<Entity> affectedEntities) {
+        double diameter = radius * 2.0;
+        affectedEntities.removeIf(entity ->
+                Math.sqrt(entity.distanceToSqr(explosionCenter)) / diameter <= 1.0
+                        && ServerExplosion.getSeenPercent(explosionCenter, entity) == 0.0F
+        );
+    }
+
     private static Set<BlockPos> processExplosionRadius(ServerLevel level, Vec3 explosionCenter, float radius) {
         Set<BlockPos> blocksToBreak = new HashSet<>();
-        int radiusInt = (int) Math.ceil(radius);
-        BlockPos explosionPos = BlockPos.containing(explosionCenter.x, explosionCenter.y, explosionCenter.z);
+        Map<BlockPos, Integer> damageMap = new HashMap<>();
 
-        for (int x = -radiusInt; x <= radiusInt; x++) {
-            for (int y = -radiusInt; y <= radiusInt; y++) {
-                for (int z = -radiusInt; z <= radiusInt; z++) {
-                    BlockPos checkPos = explosionPos.offset(x, y, z);
-                    double distance = Math.sqrt(x * x + y * y + z * z);
+        double angleStep = Math.clamp(TARGET_RAY_SPACING / Math.max(radius, 0.5), MIN_ANGLE_STEP, MAX_ANGLE_STEP);
+        int polarSteps = (int) Math.ceil(Math.PI / angleStep);
 
-                    if (distance > radius) {
-                        continue;
-                    }
+        for (int i = 0; i <= polarSteps; i++) {
+            double theta = i * angleStep;
+            double sinTheta = Math.sin(theta);
+            double cosTheta = Math.cos(theta);
 
-                    BlockState state = level.getBlockState(checkPos);
+            int azimuthSteps = Math.max(1, (int) Math.ceil((2 * Math.PI * sinTheta) / angleStep));
 
-                    if (state.is(Blocks.TNT)) {
-                        blocksToBreak.add(checkPos);
-                        continue;
-                    }
+            for (int j = 0; j < azimuthSteps; j++) {
+                double phi = (j * 2 * Math.PI) / azimuthSteps;
+                Vec3 direction = new Vec3(sinTheta * Math.cos(phi), cosTheta, sinTheta * Math.sin(phi)).normalize();
 
-                    if (shouldProcessBlock(level, explosionCenter, checkPos, state)) {
-                        int damageAmount = calculateDamageAmount(distance, radius);
-
-                        if (applyBlockDamage(level, checkPos, damageAmount)) {
-                            blocksToBreak.add(checkPos);
-                        }
-                    }
-                }
+                castExplosionRay(level, explosionCenter, direction, radius, blocksToBreak, damageMap);
             }
         }
+
+        damageMap.forEach((pos, damageAmount) -> applyBlockDamage(level, pos, damageAmount, false));
 
         return blocksToBreak;
     }
 
-    private static boolean shouldProcessBlock(ServerLevel level, Vec3 explosionCenter, BlockPos pos, BlockState state) {
-        if (state.isAir()) {
-            return false;
-        }
+    private static void castExplosionRay(
+            ServerLevel level,
+            Vec3 origin,
+            Vec3 direction,
+            float radius,
+            Set<BlockPos> blocksToBreak,
+            Map<BlockPos, Integer> damageMap
+    ) {
+        for (double d = RAY_STEP; d <= radius; d += RAY_STEP) {
+            Vec3 point = origin.add(direction.scale(d));
+            BlockPos pos = BlockPos.containing(point.x, point.y, point.z);
+            BlockState state = level.getBlockState(pos);
 
-        if (ModConfig.isProtectiveBlock(state.getBlock())) {
-            return false;
-        }
-
-        return !isBlockedByProtectiveBlock(level, explosionCenter, pos);
-    }
-
-    private static boolean isBlockedByProtectiveBlock(ServerLevel level, Vec3 explosionCenter, BlockPos targetPos) {
-        Vec3 targetCenter = Vec3.atCenterOf(targetPos);
-        Vec3 direction = targetCenter.subtract(explosionCenter).normalize();
-        double distance = explosionCenter.distanceTo(targetCenter);
-
-        double step = 0.5;
-        for (double d = step; d < distance; d += step) {
-            Vec3 checkPoint = explosionCenter.add(direction.scale(d));
-            BlockPos checkPos = BlockPos.containing(checkPoint);
-
-            if (checkPos.equals(targetPos)) {
+            if (state.isAir()) {
                 continue;
             }
 
-            BlockState state = level.getBlockState(checkPos);
-            if (ModConfig.isProtectiveBlock(state.getBlock())) {
-                return true;
+            if (state.is(Blocks.TNT)) {
+                blocksToBreak.add(pos);
+                continue;
             }
-        }
 
-        return false;
+            if (ModConfig.isProtectiveBlock(state.getBlock())) {
+                return;
+            }
+
+            int damageAmount = calculateDamageAmount(d, radius);
+            boolean destroyed = applyBlockDamage(level, pos, damageAmount, true);
+
+            damageMap.merge(pos, damageAmount, Math::max);
+
+            if (!destroyed) {
+                return;
+            }
+
+            blocksToBreak.add(pos);
+        }
     }
 
     private static int calculateDamageAmount(double distance, float radius) {
@@ -106,20 +124,25 @@ public class ExplosionHandler {
         return Math.max(1, (int) Math.round(distanceMultiplier * radiusMultiplier));
     }
 
-    private static boolean applyBlockDamage(ServerLevel level, BlockPos pos, int damageAmount) {
+    private static boolean applyBlockDamage(ServerLevel level, BlockPos pos, int damageAmount, boolean simulate) {
         BlockState state = level.getBlockState(pos);
         int requiredHits = ModConfig.getHitsForBlock(state.getBlock());
         BlockDamageData damageData = BlockDamageManager.getDamageData(level, pos);
         int currentDamage = damageData.damage() + damageAmount;
 
         if (currentDamage >= requiredHits) {
-            BlockDamageManager.removeDamage(level, pos);
+            if (!simulate) {
+                BlockDamageManager.removeDamage(level, pos);
+            }
             return true;
-        } else {
+        }
+
+        if (!simulate) {
             BlockDamageManager.setDamage(level, pos, currentDamage);
             showDamageEffects(level, pos, currentDamage, requiredHits);
-            return false;
         }
+
+        return false;
     }
 
     private static void updateAffectedBlocksList(List<BlockPos> affectedBlocks, Set<BlockPos> blocksToBreak) {
