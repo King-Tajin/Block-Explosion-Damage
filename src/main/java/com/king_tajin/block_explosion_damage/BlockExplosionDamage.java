@@ -66,7 +66,12 @@ public class BlockExplosionDamage {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
-        ExplosionHandler.handleExplosion(serverLevel, event.getExplosion(), event.getAffectedBlocks());
+        ExplosionHandler.handleExplosion(
+            serverLevel,
+            event.getExplosion(),
+            event.getAffectedBlocks(),
+            event.getAffectedEntities()
+        );
     }
 
     @SubscribeEvent

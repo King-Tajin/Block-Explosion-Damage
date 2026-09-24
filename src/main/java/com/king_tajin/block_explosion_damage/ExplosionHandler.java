@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,9 +25,16 @@ public class ExplosionHandler {
     private static final double MIN_ANGLE_STEP = 0.02;
     private static final double MAX_ANGLE_STEP = Math.PI / 6;
 
-    public static void handleExplosion(ServerLevel level, Explosion explosion, List<BlockPos> affectedBlocks) {
+    public static void handleExplosion(
+        ServerLevel level,
+        Explosion explosion,
+        List<BlockPos> affectedBlocks,
+        List<Entity> affectedEntities
+    ) {
         Vec3 explosionCenter = explosion.center();
         float radius = explosion.radius();
+
+        removeFullyShieldedEntities(explosionCenter, radius, affectedEntities);
 
         List<SubLevelAccess> nearbySubLevels = collectNearbySubLevels(level, explosionCenter, radius);
 
@@ -38,6 +46,15 @@ public class ExplosionHandler {
 
         Set<BlockPos> blocksToBreak = processExplosionRadius(level, explosionCenter, radius, nearbySubLevels);
         updateAffectedBlocksList(affectedBlocks, blocksToBreak);
+    }
+
+    private static void removeFullyShieldedEntities(Vec3 explosionCenter, float radius, List<Entity> affectedEntities) {
+        double diameter = radius * 2.0;
+        affectedEntities.removeIf(
+            entity ->
+                Math.sqrt(entity.distanceToSqr(explosionCenter)) / diameter <= 1.0 &&
+                Explosion.getSeenPercent(explosionCenter, entity) == 0.0F
+        );
     }
 
     private static List<SubLevelAccess> collectNearbySubLevels(ServerLevel level, Vec3 explosionCenter, float radius) {
