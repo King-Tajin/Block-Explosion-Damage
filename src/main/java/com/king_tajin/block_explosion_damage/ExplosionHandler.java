@@ -9,6 +9,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,6 +33,10 @@ public class ExplosionHandler {
 
         removeFullyShieldedEntities(explosionCenter, radius, affectedEntities);
 
+        if (!destroysBlocks(explosion)) {
+            return;
+        }
+
         BlockPos explosionPos = BlockPos.containing(explosionCenter.x, explosionCenter.y, explosionCenter.z);
         if (!level.getFluidState(explosionPos).isEmpty()) {
             affectedBlocks.clear();
@@ -40,6 +45,14 @@ public class ExplosionHandler {
 
         Set<BlockPos> blocksToBreak = processExplosionRadius(level, explosionCenter, radius);
         updateAffectedBlocksList(affectedBlocks, blocksToBreak);
+    }
+
+    private static boolean destroysBlocks(ServerExplosion explosion) {
+        Explosion.BlockInteraction blockInteraction = explosion.getBlockInteraction();
+        return (
+            blockInteraction == Explosion.BlockInteraction.DESTROY ||
+            blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY
+        );
     }
 
     private static void removeFullyShieldedEntities(Vec3 explosionCenter, float radius, List<Entity> affectedEntities) {
