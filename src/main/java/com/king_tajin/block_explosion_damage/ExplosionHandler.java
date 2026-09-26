@@ -36,6 +36,10 @@ public class ExplosionHandler {
 
         removeFullyShieldedEntities(explosionCenter, radius, affectedEntities);
 
+        if (!destroysBlocks(explosion)) {
+            return;
+        }
+
         List<SubLevelAccess> nearbySubLevels = collectNearbySubLevels(level, explosionCenter, radius);
 
         BlockPos explosionPos = resolveBlockPos(level, explosionCenter, nearbySubLevels);
@@ -46,6 +50,14 @@ public class ExplosionHandler {
 
         Set<BlockPos> blocksToBreak = processExplosionRadius(level, explosionCenter, radius, nearbySubLevels);
         updateAffectedBlocksList(affectedBlocks, blocksToBreak);
+    }
+
+    private static boolean destroysBlocks(Explosion explosion) {
+        Explosion.BlockInteraction blockInteraction = explosion.getBlockInteraction();
+        return (
+            blockInteraction == Explosion.BlockInteraction.DESTROY ||
+            blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY
+        );
     }
 
     private static void removeFullyShieldedEntities(Vec3 explosionCenter, float radius, List<Entity> affectedEntities) {
